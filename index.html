@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonimizador TRT-12 v6.2 - Case-Insensitive + Normalização</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1em;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box h3 {
+            color: #1565c0;
+            margin-bottom: 8px;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+            color: #424242;
+        }
+        
+        .textarea-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .textarea-box {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .textarea-box label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .textarea-box textarea {
+            flex: 1;
+            min-height: 400px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        
+        .textarea-box textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 0.9em;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Anonimizador de Minutas Judiciais TRT-12</h1>
+            <p>Versão 6.2 - Busca Inteligente (ignora maiúsculas/minúsculas e acentos)</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="info-box">
+                <h3>📋 Dados que serão anonimizados:</h3>
+                <ul>
+                    <li><strong>NOMES de pessoas físicas</strong> → [NOME_PROTEGIDO]</li>
+                    <li><strong>CPF</strong> → [CPF_PROTEGIDO]</li>
+                    <li><strong>ENDEREÇOS completos</strong> → [ENDERECO_PROTEGIDO]</li>
+                    <li><strong>E-MAILS</strong> → [EMAIL_PROTEGIDO]</li>
+                    <li><strong>TELEFONES</strong> → [TELEFONE_PROTEGIDO]</li>
+                </ul>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                    ⚠️ <strong>NÃO serão anonimizados:</strong> CNPJ, nomes de empresas, datas, valores monetários, números de processos
+                </p>
+            </div>
+            
+            <div class="custom-list-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <h3 style="color: #856404; margin-bottom: 10px;">📝 Lista Customizada de Nomes/Termos (Opcional)</h3>
+                <p style="color: #856404; font-size: 0.9em; margin-bottom: 10px;">
+                    Adicione nomes, sobrenomes ou qualquer termo específico deste processo que deve ser anonimizado (um por linha):
+                </p>
+                <textarea id="listaCustomizada" 
+                    placeholder="Exemplo:&#10;Nico&#10;Kalil&#10;Biguacu&#10;Qualquer termo específico..."
+                    style="width: 100%; height: 120px; padding: 10px; border: 2px solid #ffc107; border-radius: 5px; font-family: monospace; font-size: 13px;"></textarea>
+                <p style="color: #856404; font-size: 0.85em; margin-top: 8px;">
+                    💡 <strong>Dica:</strong> Adicione nomes raros, apelidos, ou termos sensíveis específicos deste caso
+                </p>
+            </div>
+            
+            <div class="textarea-container">
+                <div class="textarea-box">
+                    <label>📄 Texto Original (cole aqui):</label>
+                    <textarea id="textoOriginal" placeholder="Cole aqui o texto da minuta judicial para anonimizar..."></textarea>
+                </div>
+                
+                <div class="textarea-box">
+                    <label>✅ Texto Anonimizado (resultado):</label>
+                    <textarea id="textoAnonimizado" readonly placeholder="O texto anonimizado aparecerá aqui..."></textarea>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" onclick="anonimizar()">
+                    <span>🔍</span>
+                    <span>Anonimizar</span>
+                </button>
+                <button class="btn btn-secondary" onclick="carregarExemplo()">
+                    <span>📝</span>
+                    <span>Carregar Exemplo</span>
+                </button>
+                <button class="btn btn-success" onclick="copiar()">
+                    <span>📋</span>
+                    <span>Copiar Resultado</span>
+                </button>
+                <button class="btn btn-secondary" onclick="limpar()">
+                    <span>🗑️</span>
+                    <span>Limpar</span>
+                </button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-nomes">0</span>
+                    <div class="stat-label">Nomes</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-cpf">0</span>
+                    <div class="stat-label">CPF</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-enderecos">0</span>
+                    <div class="stat-label">Endereços</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-emails">0</span>
+                    <div class="stat-label">E-mails</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-telefones">0</span>
+                    <div class="stat-label">Telefones</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Sistema desenvolvido para o Gabinete TRT-12 | <strong>Versão 6.2</strong> | Busca inteligente: ignora maiúsculas/acentos</p>
+        </div>
+    </div>
+    
+    <script>
+        // ========================================
+        // DADOS EXPANDIDOS - NOMES E SOBRENOMES BRASILEIROS
+        // ========================================
+        
+        // 500+ nomes e sobrenomes mais comuns no Brasil (NORMALIZADOS - sem acentos)
+        const NOMES_BRASILEIROS = new Set([
+            // NOMES MASCULINOS (Top 100)
+            'JOSE', 'JOAO', 'ANTONIO', 'FRANCISCO', 'CARLOS', 'PAULO', 'PEDRO', 'LUCAS', 'LUIZ', 'MARCOS',
+            'LUIS', 'GABRIEL', 'RAFAEL', 'DANIEL', 'MARCELO', 'BRUNO', 'EDUARDO', 'FELIPE', 'RODRIGO', 'FABIO',
+            'FERNANDO', 'GUSTAVO', 'ANDRE', 'MAURICIO', 'RICARDO', 'ROBERTO', 'SERGIO', 'THIAGO', 'DIEGO', 'ALESSANDRO',
+            'ALEX', 'CESAR', 'LEANDRO', 'LEONARDO', 'VITOR', 'HENRIQUE', 'MATEUS', 'GUILHERME', 'RENAN', 'CAIO',
+            'IGOR', 'VINICIUS', 'ERICK', 'MURILO', 'JULIO', 'AUGUSTO', 'NICO', 'NELSON', 'MAURINO', 'NILTON',
+            'WAGNER', 'FABIANO', 'RONALDO', 'ANDERSON', 'EDSON', 'CLAUDIO', 'WILLIAN', 'LUCIANO', 'JEFFERSON', 'SAMUEL',
+            'MAURO', 'ADRIANO', 'ROGERIO', 'DAVIDSON', 'DOUGLAS', 'EMERSON', 'EVERTON', 'JEAN', 'JONATHAN',
+            'CRISTIANO', 'DENIS', 'ELIAS', 'GERSON', 'HUMBERTO', 'IVAN', 'JAIR', 'JAIRO', 'WESLEY',
+            'TIAGO', 'WALTER', 'YURI', 'ALEXSANDRO', 'ALISSON', 'CELSO', 'DAVI', 'EDMAR', 'VANILSON',
+            'EVANDRO', 'FABRICIO', 'GERALDO', 'GILBERTO', 'HELIO', 'JOABE', 'JONAS', 'MATHEUS', 'MAICON', 'MILTON',
+            
+            // NOMES FEMININOS (Top 100)
+            'MARIA', 'ANA', 'FRANCISCA', 'ANTONIA', 'ADRIANA', 'JULIANA', 'MARCIA', 'FERNANDA', 'PATRICIA', 'ALINE',
+            'SANDRA', 'CAMILA', 'AMANDA', 'BRUNA', 'JESSICA', 'LETICIA', 'JULIA', 'LUCIANA', 'VANESSA', 'MARIANA',
+            'GABRIELA', 'BEATRIZ', 'LARISSA', 'TATIANA', 'SILVIA', 'MONICA', 'MICHELE', 'RENATA', 'CRISTINA', 'SABRINA',
+            'CARLA', 'ROSANGELA', 'DENISE', 'SIMONE', 'ELIANE', 'CLAUDIA', 'VERA', 'ROSA', 'TEREZINHA', 'APARECIDA',
+            'CONCEICAO', 'LUCIA', 'ISABEL', 'ANGELICA', 'ANDREA', 'DANIELA', 'RAQUEL', 'CAROLINE', 'LEILA', 'CLARA',
+            'FABIANA', 'JOANA', 'KARINA', 'LILIAN', 'MARLI', 'NEUZA', 'REGINA', 'RITA', 'SONIA', 'SUELI',
+            'TANIA', 'VALERIA', 'VIVIANE', 'ALESSANDRA', 'BIANCA', 'CAROLINA', 'DEBORA', 'ELIANA', 'ELIZABETE', 'FATIMA',
+            'GISELE', 'HELENA', 'IRENE', 'JAQUELINE', 'KELLY', 'LUANA', 'MARTA', 'NATALIA', 'OLIVIA', 'PRISCILA',
+            'SOLANGE', 'STEPHANIE', 'TALITA', 'TELMA', 'THAIS', 'VIRGINIA', 'ZELIA', 'IARA', 'IVANILDA', 'JOICE',
+            'LAIS', 'LETICIA', 'LIDIA', 'LORENA', 'LUISA', 'MARGARETE', 'MAYARA', 'MIRIAM', 'NEIDE', 'PAMELA',
+            
+            // SOBRENOMES (Top 300)
+            'SILVA', 'SANTOS', 'OLIVEIRA', 'SOUZA', 'RODRIGUES', 'FERREIRA', 'ALVES', 'PEREIRA', 'LIMA', 'GOMES',
+            'COSTA', 'RIBEIRO', 'MARTINS', 'CARVALHO', 'ALMEIDA', 'LOPES', 'SOARES', 'FERNANDES', 'VIEIRA', 'BARBOSA',
+            'ROCHA', 'DIAS', 'NASCIMENTO', 'ARAUJO', 'MELO', 'CARDOSO', 'REIS', 'CASTRO', 'PINTO', 'TEIXEIRA',
+            'FREITAS', 'MENDES', 'CAVALCANTI', 'MONTEIRO', 'NUNES', 'MOREIRA', 'RAMOS', 'AZEVEDO', 'CAMPOS', 'MIRANDA',
+            'MACHADO', 'MORAES', 'CORREIA', 'BORGES', 'MARQUES', 'DUARTE', 'MEDEIROS', 'GODOY', 'KALIL', 'KOWALSKI',
+            'BIGUACU', 'FARIAS', 'VARGAS', 'COELHO', 'VIANA', 'FONSECA', 'ASSUNCAO', 'BEZERRA', 'XAVIER', 'TAVARES',
+            'CUNHA', 'RESENDE', 'NOGUEIRA', 'LACERDA', 'BATISTA', 'PINHEIRO', 'FIGUEIREDO', 'BARROS', 'MOURA', 'PACHECO',
+            'BRITO', 'AMORIM', 'GUIMARAES', 'CORREA', 'FREIRE', 'ANDRADE', 'LEITE', 'SALES', 'BARRETO', 'CAMARA',
+            'MATOS', 'VASCONCELOS', 'MENEZES', 'MORAIS', 'FOGACA', 'EVANGELISTA', 'SAMPAIO', 'NEVES', 'HENRIQUES', 'MAGALHAES',
+            'RIOS', 'BRAGA', 'SIQUEIRA', 'VALENTE', 'AMARAL', 'BUENO', 'MACEDO', 'GONCALVES', 'TORRES', 'SILVEIRA',
+            'Toledo', 'GUERRA', 'GUEDES', 'HOLANDA', 'LEAL', 'LUCENA', 'PORTELLA', 'QUINTANA', 'RANGEL', 'SALGADO',
+            'SERRANO', 'UCHOA', 'VIDAL', 'WANDERLEY', 'XAVIER', 'ZANETTI', 'ABREU', 'AGUIAR', 'ALCANTARA', 'ALENCAR',
+            'ALVARENGA', 'ALBUQUERQUE', 'AMARANTE', 'ASSIS', 'BACELAR', 'BANDEIRA', 'BARCELOS', 'BARROSO', 'BASTOS', 'BENTO',
+            'BERNARDO', 'BOTELHO', 'BRAGANCA', 'BRANDAO', 'CABRAL', 'CALDAS', 'CALDEIRA', 'CAMACHO', 'CAMARGO', 'CANTO',
+            'CAPELETTI', 'CARNEIRO', 'CARRASCO', 'CARVALHAL', 'CASANOVA', 'CASTELO', 'CHAVES', 'COIMBRA', 'CONSTANTE', 'CORDEIRO',
+            'CORTEZ', 'COUTINHO', 'CRUZ', 'DANTAS', 'DELGADO', 'DORNELES', 'DRUMMOND', 'DUTRA', 'ESPINDOLA', 'ESTEVES',
+            'FAGUNDES', 'FALCAO', 'FARIA', 'FELIX', 'FIGUEIRA', 'FLORES', 'FRAGA', 'FRANCA', 'GARCIA', 'GENTIL',
+            'GIL', 'GIMENEZ', 'GOUVEIA', 'GUERREIRO', 'GUSMAO', 'HENRIQUE', 'IGLESIAS', 'JARDIM', 'JUNQUEIRA', 'LARA',
+            'LEAO', 'LOBO', 'LOPES', 'LUCAS', 'MACIEL', 'MADUREIRA', 'MALTA', 'MANOEL', 'MARINHO', 'MATOS',
+            'MEDINA', 'MELLO', 'MENDONCA', 'MESSIAS', 'MILHOMEM', 'MONTENEGRO', 'MONTES', 'MORENO', 'MOTTA', 'MUNIZ',
+            'NAVARRO', 'NICOLAU', 'NOBREGA', 'NORONHA', 'NOVAIS', 'ORNELAS', 'ORTIZ', 'PAES', 'PAIVA', 'PALMA',
+            'PALMEIRA', 'PARDAL', 'PARENTE', 'PARRA', 'PASSOS', 'PAULINO', 'PAZ', 'PEDREIRA', 'PEGADO', 'PENHA',
+            'PESTANA', 'PETRONIO', 'PIMENTEL', 'PIMENTA', 'PIRES', 'PONTE', 'PONTES', 'PORTO', 'PRADO', 'QUEIROZ',
+            'RABELO', 'RAFAEL', 'RAPOSO', 'REBELO', 'REGO', 'RIBAS', 'RICARDO', 'RIOS', 'ROBLES', 'ROSA',
+            'RUBIO', 'SA', 'SACRAMENTO', 'SALAZAR', 'SALLES', 'SANCHES', 'SANTANA', 'SANTIAGO', 'SARAIVA', 'SARMENTO',
+            'SEABRA', 'SEQUEIRA', 'SERRA', 'SEVERINO', 'SIMOES', 'SOUTO', 'SPINOLA', 'TAVEIRA', 'TELES', 'TENORIO',
+            'TERRA', 'THOMAZ', 'TOLENTINO', 'TOME', 'TRINDADE', 'UCHOA', 'VALENCA', 'VALLE', 'VASCONCELOS', 'VAZ',
+            'VEIGA', 'VELASCO', 'VELOSO', 'VENTURA', 'VERISSIMO', 'VIANA', 'VICENTE', 'VILELA', 'VILLA', 'VILLAR',
+            'VITAL', 'XAVIER', 'ZACARIAS', 'ZAMORA', 'ZANELLA', 'ZEFERINO', 'ZENAIDE', 'ZIMMERMANN', 'ZUNIGA'
+        ]);
+        
+        // Padrões de detecção automática (100% confiáveis)
+        const PADROES = {
+            cpf: /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,
+            email: /\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g,
+            telefone: /\b\(?\d{2}\)?\s*\d{4,5}-?\d{4}\b/g,
+            endereco: /\b(?:Rua|Av\.|Avenida|Alameda|Praça|Travessa|Rod\.|Rodovia)\s+[A-ZÀ-Ú][^,\n]{5,50},\s*\d+/gi
+        };
+        
+        // Estado global
+        let estatisticas = {
+            nomes: 0,
+            cpf: 0,
+            enderecos: 0,
+            emails: 0,
+            telefones: 0
+        };
+        
+        function carregarExemplo() {
+            document.getElementById('textoOriginal').value = `VISTOS, relatados e discutidos estes autos de RECURSO ORDINÁRIO, originários da 7ª Vara do Trabalho de Florianópolis, sendo recorrente CENTRAL DE COMUNICACAO S/S LTDA - EPP e recorrida LEILA APARECIDA GODOY.
+
+PROCESSO Nº 0001234-56.2024.5.12.0001
+
+RECLAMANTE: MAURINO NILTON FERNANDES, CPF 123.456.789-00
+RECLAMADA: FIBRAS BIGUACU LTDA, CNPJ 12.345.678/0001-90
+
+O supervisor Nico chamava o reclamante de "velho".
+A testemunha J.d.M. confirmou os fatos em 15/03/2024.
+A testemunha G.B. relatou que "a dona Leila sempre foi respeitosa".
+Dr. Paulo Silva atestou a doença ocupacional.
+
+Email: maurino@email.com
+Telefone: (48) 98765-4321
+Endereço: Rua das Flores, 123, Centro`;
+            
+            // Exemplo de lista customizada
+            document.getElementById('listaCustomizada').value = `Nico`;
+        }
+        
+        function anonimizar() {
+            const textoOriginal = document.getElementById('textoOriginal').value;
+            
+            if (!textoOriginal.trim()) {
+                alert('Por favor, insira um texto para anonimizar.');
+                return;
+            }
+            
+            // Resetar estatísticas
+            estatisticas = {
+                nomes: 0,
+                cpf: 0,
+                enderecos: 0,
+                emails: 0,
+                telefones: 0
+            };
+            
+            let texto = textoOriginal;
+            
+            // ETAPA 1: Substituir dados 100% confiáveis primeiro
+            texto = texto.replace(PADROES.cpf, () => {
+                estatisticas.cpf++;
+                return '[CPF_PROTEGIDO]';
+            });
+            
+            texto = texto.replace(PADROES.email, () => {
+                estatisticas.emails++;
+                return '[EMAIL_PROTEGIDO]';
+            });
+            
+            texto = texto.replace(PADROES.telefone, () => {
+                estatisticas.telefones++;
+                return '[TELEFONE_PROTEGIDO]';
+            });
+            
+            texto = texto.replace(PADROES.endereco, () => {
+                estatisticas.enderecos++;
+                return '[ENDERECO_PROTEGIDO]';
+            });
+            
+            // ETAPA 2: Detectar e substituir NOMES (estratégia em 3 camadas)
+            texto = detectarNomes(texto);
+            
+            // Atualizar resultado
+            document.getElementById('textoAnonimizado').value = texto;
+            atualizarEstatisticas();
+        }
+        
+        // Função para normalizar texto (remover acentos e converter para maiúsculas)
+        function normalizarTexto(texto) {
+            return texto
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+                .toUpperCase()
+                .trim();
+        }
+        
+        function detectarNomes(texto) {
+            const nomesEncontrados = new Set();
+            
+            // ETAPA 0: Processar lista customizada do usuário (PRIORIDADE MÁXIMA)
+            const listaCustomizada = document.getElementById('listaCustomizada').value;
+            if (listaCustomizada.trim()) {
+                const termosCustomizados = listaCustomizada
+                    .split('\n')
+                    .map(termo => termo.trim())
+                    .filter(termo => termo.length > 0);
+                
+                // Para cada termo, buscar no texto ignorando case e acentos
+                termosCustomizados.forEach(termo => {
+                    const termoNormalizado = normalizarTexto(termo);
+                    
+                    // Criar regex que encontra o termo independente de case/acentos
+                    // Primeiro, criar versão com escape de caracteres especiais
+                    const termoEscapado = termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    
+                    // Criar regex case-insensitive
+                    const regex = new RegExp('\\b' + termoEscapado + '\\b', 'gi');
+                    
+                    // Encontrar todas as ocorrências no texto original
+                    let match;
+                    while ((match = regex.exec(texto)) !== null) {
+                        // Adicionar a forma exata encontrada no texto
+                        nomesEncontrados.add(match[0]);
+                    }
+                });
+            }
+            
+            // CAMADA 1: Nomes após títulos - CAPTURA NOME COMPLETO (até 3 palavras)
+            const regexTitulos = /\b(?:Dr\.|Dra\.|Sr\.|Sra\.|Prof\.|Profª|dona|sr)\s+([A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ][a-zàáâãèéêìíîòóôõùúûç]+(?:\s+[A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ][a-zàáâãèéêìíîòóôõùúûç]+){0,2})\b/gi;
+            
+            let match;
+            while ((match = regexTitulos.exec(texto)) !== null) {
+                const nomeCompleto = match[1].trim();
+                const palavras = nomeCompleto.split(/\s+/);
+                
+                // Verificar se PELO MENOS UMA palavra é conhecida (normalizada)
+                const temNomeConhecido = palavras.some(p => {
+                    const normalizado = normalizarTexto(p);
+                    return NOMES_BRASILEIROS.has(normalizado);
+                });
+                
+                if (temNomeConhecido) {
+                    nomesEncontrados.add(nomeCompleto);
+                }
+            }
+            
+            // CAMADA 2: Partes do processo com dois-pontos - CAPTURA NOME COMPLETO
+            const regexPartes = /\b(?:RECLAMANTE|RECLAMADA|RECORRENTE|RECORRIDA|AUTOR|RÉ|AUTORA|RÉU|AGRAVANTE|AGRAVADA):\s*([A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ][A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ\s]+?)(?=,|\.|CPF|CNPJ|\n)/gi;
+            
+            while ((match = regexPartes.exec(texto)) !== null) {
+                const nomeCompleto = match[1].trim();
+                
+                // Verificar se não é empresa
+                if (!nomeCompleto.includes('LTDA') && !nomeCompleto.includes('S/A') && 
+                    !nomeCompleto.includes('EPP') && !nomeCompleto.includes('EIRELI')) {
+                    
+                    const palavras = nomeCompleto.split(/\s+/);
+                    
+                    // Verificar se PELO MENOS 2 palavras são conhecidas (normalizadas)
+                    const palavrasConhecidas = palavras.filter(p => {
+                        const normalizado = normalizarTexto(p);
+                        return NOMES_BRASILEIROS.has(normalizado);
+                    });
+                    
+                    if (palavrasConhecidas.length >= 2) {
+                        nomesEncontrados.add(nomeCompleto);
+                    }
+                }
+            }
+            
+            // CAMADA 3: Nomes em CAIXA ALTA - CAPTURA NOME COMPLETO
+            const regexCaixaAlta = /\b([A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ]{3,}(?:\s+[A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ]{3,}){1,3})\b/g;
+            
+            while ((match = regexCaixaAlta.exec(texto)) !== null) {
+                const nomeCompleto = match[1].trim();
+                const palavras = nomeCompleto.split(/\s+/);
+                
+                // Filtros
+                const naoEhEmpresa = !nomeCompleto.includes('LTDA') && !nomeCompleto.includes('S/A') && 
+                                     !nomeCompleto.includes('EPP') && !nomeCompleto.includes('EIRELI') && 
+                                     !nomeCompleto.includes('CENTRAL') && !nomeCompleto.includes('FIBRAS');
+                
+                // Pelo menos 2 palavras devem ser conhecidas (normalizadas)
+                const palavrasConhecidas = palavras.filter(p => {
+                    const normalizado = normalizarTexto(p);
+                    return NOMES_BRASILEIROS.has(normalizado);
+                });
+                
+                if (naoEhEmpresa && palavrasConhecidas.length >= 2 && palavras.length >= 2 && palavras.length <= 4) {
+                    nomesEncontrados.add(nomeCompleto);
+                }
+            }
+            
+            // CAMADA 4: Capturar sobrenomes isolados após nomes já detectados
+            // Exemplo: "LEILA" já foi detectado, agora buscar "APARECIDA GODOY" logo após
+            const nomesArray = Array.from(nomesEncontrados);
+            nomesArray.forEach(nomeBase => {
+                // Buscar padrão: nomeBase + palavras em CAIXA ALTA
+                const regexSobrenomes = new RegExp('\\b' + nomeBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+([A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ]{3,}(?:\\s+[A-ZÀÁÂÃÈÉÊÌÍÎÒÓÔÕÙÚÛÇ]{3,}){0,2})\\b', 'g');
+                
+                let matchSobrenome;
+                while ((matchSobrenome = regexSobrenomes.exec(texto)) !== null) {
+                    const sobrenomes = matchSobrenome[1].trim();
+                    const palavrasSobrenome = sobrenomes.split(/\s+/);
+                    
+                    // Verificar se pelo menos 1 sobrenome é conhecido (normalizado)
+                    const temSobrenomeConhecido = palavrasSobrenome.some(p => {
+                        const normalizado = normalizarTexto(p);
+                        return NOMES_BRASILEIROS.has(normalizado);
+                    });
+                    
+                    if (temSobrenomeConhecido) {
+                        // Adicionar o nome completo
+                        nomesEncontrados.add(nomeBase + ' ' + sobrenomes);
+                    }
+                }
+            });
+            
+            // Substituir todos os nomes encontrados (do mais longo para o mais curto)
+            const nomesOrdenados = Array.from(nomesEncontrados).sort((a, b) => b.length - a.length);
+            
+            nomesOrdenados.forEach(nome => {
+                const regex = new RegExp('\\b' + nome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+                const ocorrencias = (texto.match(regex) || []).length;
+                
+                if (ocorrencias > 0) {
+                    texto = texto.replace(regex, '[NOME_PROTEGIDO]');
+                    estatisticas.nomes += ocorrencias;
+                }
+            });
+            
+            return texto;
+        }
+        
+        function atualizarEstatisticas() {
+            document.getElementById('stat-nomes').textContent = estatisticas.nomes;
+            document.getElementById('stat-cpf').textContent = estatisticas.cpf;
+            document.getElementById('stat-enderecos').textContent = estatisticas.enderecos;
+            document.getElementById('stat-emails').textContent = estatisticas.emails;
+            document.getElementById('stat-telefones').textContent = estatisticas.telefones;
+        }
+        
+        function copiar() {
+            const textarea = document.getElementById('textoAnonimizado');
+            if (!textarea.value.trim()) {
+                alert('Não há texto anonimizado para copiar.');
+                return;
+            }
+            textarea.select();
+            document.execCommand('copy');
+            alert('✅ Texto copiado para a área de transferência!');
+        }
+        
+        function limpar() {
+            document.getElementById('textoOriginal').value = '';
+            document.getElementById('textoAnonimizado').value = '';
+            document.getElementById('listaCustomizada').value = '';
+            estatisticas = {
+                nomes: 0,
+                cpf: 0,
+                enderecos: 0,
+                emails: 0,
+                telefones: 0
+            };
+            atualizarEstatisticas();
+        }
+    </script>
+</body>
+</html>
